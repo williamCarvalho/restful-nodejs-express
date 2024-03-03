@@ -10,9 +10,8 @@
 
 ## Initial commands
 ```shell
-npm i -g nodemon@latest
+npm i --save-dev nodemon@latest
 npm i --save express@latest
 npm i --save config@latest
-npm i --save consign@latest
 npm i --save uuid@latest
 ```
