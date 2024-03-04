@@ -1,31 +1,33 @@
+import { Request, Response } from 'express';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { ICustomer, ICustomerData, IListCustomer } from './customer.types';
 
-const sendResponse = (res: any, success: any, message: any) => {
-    res.status(success ? 200 : 404).json({ success, message });
+const sendResponse = (res: Response, success: boolean, message: string, list: ICustomerData) => {
+    res.status(success ? 200 : 404).json({ success, message, list });
 };
 
-const updateCustomer = (existingCustomer: any, updates: any) => ({
+const updateCustomer = (existingCustomer: ICustomer, updates: ICustomer) => ({
         ...existingCustomer,
         ...updates,
-        updatedAt: new Date(),
+        updatedAt: updates.updatedAt ?? new Date().toDateString(),
 });
 
 export const customer = () => {
-    let customersDB = JSON.parse(fs.readFileSync('src/data/customer.json', 'utf-8'))
-
+    let customersDB: IListCustomer = JSON.parse(fs.readFileSync('src/data/customer.json', 'utf-8'))
+    
     const {
         customers: customersMock,
     } = customersDB;
 
-    const listCustomers = (_req: any, res: any) => res.status(200).json(customersDB);
+    const listCustomers = (_req: Request, res: Response) => res.status(200).json(customersDB);
 
-    const saveCustomers = ({ body }: any, res: any) => {
-        const customer = {
-            id: uuidv4(),
-            parentId: uuidv4(),
+    const saveCustomers = ({ body }: Request, res: Response) => {
+        const customer: ICustomer = {
+            id: body.id ?? uuidv4(),
+            parentId: body.parentId ?? uuidv4(),
+            createdAt: body.createdAt ?? new Date().toDateString(),
             ...body,
-            createdAt: new Date(),
         };
 
         customersMock.data.push(customer)
@@ -33,27 +35,27 @@ export const customer = () => {
         res.status(201).json({message: 'Customer added successfully!', customer});
     };
 
-    const removeCustomers = ({ params }: any, res: any) => {
+    const removeCustomers = ({ params }: Request, res: Response) => {
         const { id } = params;
 
-        const foundCustomerIndex = customersMock.data.findIndex((customer: any) => customer.id === id);
+        const foundCustomerIndex = customersMock.data.findIndex((customer: ICustomer) => customer.id === id);
 
         if (foundCustomerIndex === -1) {
-            sendResponse(res, false, 'Customer not found on base.');
+            sendResponse(res, false, 'Customer not found on base.', customersMock);
             return;
         }
 
         customersMock.data.splice(foundCustomerIndex, 1);
-        sendResponse(res, true, 'Customer found and deleted successfully!');
+        sendResponse(res, true, 'Customer found and deleted successfully!', customersMock);
     };
 
-    const updateCustomers = ({ params, body } : any, res: any) => {
+    const updateCustomers = ({ params, body } : Request, res: Response) => {
         const { id } = params;
 
-        const foundCustomerIndex = customersMock.data.findIndex((customer: any) => customer.id === id);
+        const foundCustomerIndex = customersMock.data.findIndex((customer: ICustomer) => customer.id === id);
 
         if (foundCustomerIndex === -1) {
-            sendResponse(res, false, 'Customer not found on base.');
+            sendResponse(res, false, 'Customer not found on base.', customersMock);
             return;
         }
 
@@ -61,7 +63,7 @@ export const customer = () => {
         const updatedCustomer = updateCustomer(customer, body);
 
         customersMock.data.splice(foundCustomerIndex, 1, updatedCustomer);
-        sendResponse(res, true, 'Customer found and updated successfully!');
+        sendResponse(res, true, 'Customer found and updated successfully!', customersMock);
     };
 
     return {

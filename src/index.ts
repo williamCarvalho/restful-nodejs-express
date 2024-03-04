@@ -10,7 +10,7 @@ app.set('port', process.env.PORT || 8080)
     .use(express.urlencoded({ extended: true }))
     .use('/api', router());
 
-const port = app.get('port');
+const port: string = app.get('port');
 
 app.listen(port, () => {
     console.log(`[server]: server running on the port: ${port}`)

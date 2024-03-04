@@ -16,5 +16,5 @@ export const router = () => {
         .delete('/v1/customer/:id', removeCustomers)
         .put('/v1/customer/:id', updateCustomers);
 
-    return itensRouter
+    return itensRouter;
 }
